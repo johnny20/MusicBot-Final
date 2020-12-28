@@ -21,8 +21,8 @@ import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
 import com.jagrosh.jmusicbot.settings.Settings;
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.User;
 
 /**
  *
@@ -36,7 +36,7 @@ public class RemoveCmd extends MusicCommand
         this.name = "remove";
         this.help = "removes a song from the queue";
         this.arguments = "<position|ALL>";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.aliases = new String[]{"delete"};
         this.beListening = true;
         this.bePlaying = true;
     }

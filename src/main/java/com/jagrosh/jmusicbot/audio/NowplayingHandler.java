@@ -23,13 +23,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 
 /**
  *
@@ -48,8 +47,7 @@ public class NowplayingHandler
     
     public void init()
     {
-        if(!bot.getConfig().useNPImages())
-            bot.getThreadpool().scheduleWithFixedDelay(() -> updateAll(), 0, 5, TimeUnit.SECONDS);
+        bot.getThreadpool().scheduleWithFixedDelay(() -> updateAll(), 0, 5, TimeUnit.SECONDS);
     }
     
     public void setLastNPMessage(Message m)
@@ -109,25 +107,23 @@ public class NowplayingHandler
         if(tchan!=null && guild.getSelfMember().hasPermission(tchan, Permission.MANAGE_CHANNEL))
         {
             String otherText;
-            String topic = tchan.getTopic();
-            if(topic==null || topic.isEmpty())
+            if(tchan.getTopic()==null || tchan.getTopic().isEmpty())
                 otherText = "\u200B";
-            else if(topic.contains("\u200B"))
-                otherText = topic.substring(topic.lastIndexOf("\u200B"));
+            else if(tchan.getTopic().contains("\u200B"))
+                otherText = tchan.getTopic().substring(tchan.getTopic().lastIndexOf("\u200B"));
             else
-                otherText = "\u200B\n "+topic;
+                otherText = "\u200B\n "+tchan.getTopic();
             String text = handler.getTopicFormat(bot.getJDA()) + otherText;
             if(!text.equals(tchan.getTopic()))
             {
                 try 
                 {
-                    // normally here if 'wait' was false, we'd want to queue, however,
-                    // new discord ratelimits specifically limiting changing channel topics
-                    // mean we don't want a backlog of changes piling up, so if we hit a 
-                    // ratelimit, we just won't change the topic this time
-                    tchan.getManager().setTopic(text).complete(wait);
+                    if(wait)
+                        tchan.getManager().setTopic(text).complete();
+                    else
+                        tchan.getManager().setTopic(text).queue();
                 } 
-                catch(PermissionException | RateLimitedException ignore) {}
+                catch(PermissionException ignore) {}
             }
         }
     }
@@ -139,7 +135,7 @@ public class NowplayingHandler
         if(bot.getConfig().getSongInStatus())
         {
             if(track!=null && bot.getJDA().getGuilds().stream().filter(g -> g.getSelfMember().getVoiceState().inVoiceChannel()).count()<=1)
-                bot.getJDA().getPresence().setActivity(Activity.listening(track.getInfo().title));
+                bot.getJDA().getPresence().setGame(Game.listening(track.getInfo().title));
             else
                 bot.resetGame();
         }

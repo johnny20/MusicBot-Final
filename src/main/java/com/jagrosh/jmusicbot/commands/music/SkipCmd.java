@@ -19,7 +19,7 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.core.entities.User;
 
 /**
  *
@@ -32,7 +32,7 @@ public class SkipCmd extends MusicCommand
         super(bot);
         this.name = "skip";
         this.help = "votes to skip the current song";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.aliases = new String[]{"voteskip"};
         this.beListening = true;
         this.bePlaying = true;
     }

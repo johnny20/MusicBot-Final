@@ -30,14 +30,13 @@ import com.jagrosh.jmusicbot.queue.FairQueue;
 import com.jagrosh.jmusicbot.settings.Settings;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
-import java.nio.ByteBuffer;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.audio.AudioSendHandler;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.audio.AudioSendHandler;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.User;
 
 /**
  *
@@ -167,9 +166,6 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler
                 manager.getBot().getNowplayingHandler().onTrackUpdate(guildId, null, this);
                 if(!manager.getBot().getConfig().getStay())
                     manager.getBot().closeAudioConnection(guildId);
-                // unpause, in the case when the player was paused and the track has been skipped.
-                // this is to prevent the player being paused next time it's being used.
-                player.setPaused(false);
             }
         }
         else
@@ -265,7 +261,7 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler
     }
     
     // Audio Send Handler methods
-    /*@Override
+    @Override
     public boolean canProvide() 
     {
         if (lastFrame == null)
@@ -284,19 +280,6 @@ public class AudioHandler extends AudioEventAdapter implements AudioSendHandler
         lastFrame = null;
 
         return data;
-    }*/
-    
-    @Override
-    public boolean canProvide() 
-    {
-        lastFrame = audioPlayer.provide();
-        return lastFrame != null;
-    }
-
-    @Override
-    public ByteBuffer provide20MsAudio() 
-    {
-        return ByteBuffer.wrap(lastFrame.getData());
     }
 
     @Override

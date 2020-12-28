@@ -28,8 +28,8 @@ import com.jagrosh.jmusicbot.audio.AudioHandler;
 import com.jagrosh.jmusicbot.audio.QueuedTrack;
 import com.jagrosh.jmusicbot.commands.MusicCommand;
 import com.jagrosh.jmusicbot.utils.FormatUtil;
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Message;
 
 /**
  *
@@ -41,12 +41,12 @@ public class SearchCmd extends MusicCommand
     private final OrderedMenu.Builder builder;
     private final String searchingEmoji;
     
-    public SearchCmd(Bot bot)
+    public SearchCmd(Bot bot, String searchingEmoji)
     {
         super(bot);
-        this.searchingEmoji = bot.getConfig().getSearching();
+        this.searchingEmoji = searchingEmoji;
         this.name = "search";
-        this.aliases = bot.getConfig().getAliases(this.name);
+        this.aliases = new String[]{"ytsearch"};
         this.arguments = "<query>";
         this.help = "searches Youtube for a provided query";
         this.beListening = true;
@@ -115,8 +115,8 @@ public class SearchCmd extends MusicCommand
                         }
                         AudioHandler handler = (AudioHandler)event.getGuild().getAudioManager().getSendingHandler();
                         int pos = handler.addTrack(new QueuedTrack(track, event.getAuthor()))+1;
-                        event.replySuccess("Added **" + FormatUtil.filter(track.getInfo().title)
-                                + "** (`" + FormatUtil.formatTime(track.getDuration()) + "`) " + (pos==0 ? "to begin playing" 
+                        event.replySuccess("Added **"+track.getInfo().title
+                                +"** (`"+FormatUtil.formatTime(track.getDuration())+"`) "+(pos==0 ? "to begin playing" 
                                     : " to the queue at position "+pos));
                     })
                     .setCancel((msg) -> {})

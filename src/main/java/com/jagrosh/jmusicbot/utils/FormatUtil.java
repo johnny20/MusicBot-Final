@@ -16,9 +16,9 @@
 package com.jagrosh.jmusicbot.utils;
 
 import java.util.List;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 
 /**
  *
@@ -92,9 +92,6 @@ public class FormatUtil {
     
     public static String filter(String input)
     {
-        return input.replace("\u202E","")
-                .replace("@everyone", "@\u0435veryone") // cyrillic letter e
-                .replace("@here", "@h\u0435re") // cyrillic letter e
-                .trim();
+        return input.replace("@everyone", "@\u0435veryone").replace("@here", "@h\u0435re").trim(); // cyrillic letter e
     }
 }

@@ -23,8 +23,9 @@ import com.typesafe.config.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import net.dv8tion.jda.api.OnlineStatus;
-import net.dv8tion.jda.api.entities.Activity;
+import java.nio.file.Paths;
+import net.dv8tion.jda.core.OnlineStatus;
+import net.dv8tion.jda.core.entities.Game;
 
 /**
  * 
@@ -44,10 +45,8 @@ public class BotConfig
     private boolean stayInChannel, songInGame, npImages, updatealerts, useEval, dbots;
     private long owner, maxSeconds;
     private OnlineStatus status;
-    private Activity game;
-    private Config aliases;
-
-
+    private Game game;
+    
     private boolean valid = false;
     
     public BotConfig(Prompt prompt)
@@ -63,7 +62,7 @@ public class BotConfig
         try 
         {
             // get the path to the config, default config.txt
-            path = OtherUtil.getPath(System.getProperty("config.file", System.getProperty("config", "config.txt")));
+            path = Paths.get(System.getProperty("config.file", System.getProperty("config", "config.txt")));
             if(path.toFile().exists())
             {
                 if(System.getProperty("config.file") == null)
@@ -95,7 +94,6 @@ public class BotConfig
             useEval = config.getBoolean("eval");
             maxSeconds = config.getLong("maxtime");
             playlistsFolder = config.getString("playlistsfolder");
-            aliases = config.getConfig("aliases");
             dbots = owner == 113156185389092864L;
             
             // we may need to write a new config file
@@ -137,7 +135,7 @@ public class BotConfig
                 if(owner<=0)
                 {
                     prompt.alert(Prompt.Level.ERROR, CONTEXT, "Invalid User ID! Exiting.\n\nConfig Location: " + path.toAbsolutePath().toString());
-                    return;
+                    System.exit(0);
                 }
                 else
                 {
@@ -146,7 +144,31 @@ public class BotConfig
             }
             
             if(write)
-                writeToFile();
+            {
+                String original = OtherUtil.loadResource(this, "/reference.conf");
+                byte[] bytes;
+                if(original==null)
+                {
+                    bytes = ("token = "+token+"\r\nowner = "+owner).getBytes();
+                }
+                else
+                {
+                    bytes = original.substring(original.indexOf(START_TOKEN)+START_TOKEN.length(), original.indexOf(END_TOKEN))
+                        .replace("BOT_TOKEN_HERE", token)
+                        .replace("0 // OWNER ID", Long.toString(owner))
+                        .trim().getBytes();
+                }
+                try 
+                {
+                    Files.write(path, bytes);
+                }
+                catch(IOException ex) 
+                {
+                    prompt.alert(Prompt.Level.WARNING, CONTEXT, "Failed to write new config options to config.txt: "+ex
+                        + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: " 
+                        + path.toAbsolutePath().toString());
+                }
+            }
             
             // if we get through the whole config, it's good to go
             valid = true;
@@ -154,33 +176,6 @@ public class BotConfig
         catch (ConfigException ex)
         {
             prompt.alert(Prompt.Level.ERROR, CONTEXT, ex + ": " + ex.getMessage() + "\n\nConfig Location: " + path.toAbsolutePath().toString());
-        }
-    }
-    
-    private void writeToFile()
-    {
-        String original = OtherUtil.loadResource(this, "/reference.conf");
-        byte[] bytes;
-        if(original==null)
-        {
-            bytes = ("token = "+token+"\r\nowner = "+owner).getBytes();
-        }
-        else
-        {
-            bytes = original.substring(original.indexOf(START_TOKEN)+START_TOKEN.length(), original.indexOf(END_TOKEN))
-                .replace("BOT_TOKEN_HERE", token)
-                .replace("0 // OWNER ID", Long.toString(owner))
-                .trim().getBytes();
-        }
-        try 
-        {
-            Files.write(path, bytes);
-        }
-        catch(IOException ex) 
-        {
-            prompt.alert(Prompt.Level.WARNING, CONTEXT, "Failed to write new config options to config.txt: "+ex
-                + "\nPlease make sure that the files are not on your desktop or some other restricted area.\n\nConfig Location: " 
-                + path.toAbsolutePath().toString());
         }
     }
     
@@ -239,7 +234,7 @@ public class BotConfig
         return searchingEmoji;
     }
     
-    public Activity getGame()
+    public Game getGame()
     {
         return game;
     }
@@ -304,17 +299,5 @@ public class BotConfig
         if(maxSeconds<=0)
             return false;
         return Math.round(track.getDuration()/1000.0) > maxSeconds;
-    }
-
-    public String[] getAliases(String command)
-    {
-        try
-        {
-            return aliases.getStringList(command).toArray(new String[0]);
-        }
-        catch(NullPointerException | ConfigException.Missing e)
-        {
-            return new String[0];
-        }
     }
 }

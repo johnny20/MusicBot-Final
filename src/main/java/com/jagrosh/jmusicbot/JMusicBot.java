@@ -15,6 +15,7 @@
  */
 package com.jagrosh.jmusicbot;
 
+import com.jagrosh.jdautilities.command.CommandClient;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jdautilities.examples.command.*;
@@ -28,12 +29,9 @@ import com.jagrosh.jmusicbot.gui.GUI;
 import com.jagrosh.jmusicbot.settings.SettingsManager;
 import com.jagrosh.jmusicbot.utils.OtherUtil;
 import java.awt.Color;
-import java.util.Arrays;
 import javax.security.auth.login.LoginException;
-import net.dv8tion.jda.api.*;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.core.*;
+import net.dv8tion.jda.core.entities.Game;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +44,9 @@ public class JMusicBot
     public final static String PLAY_EMOJI  = "\u25B6"; // ▶
     public final static String PAUSE_EMOJI = "\u23F8"; // ⏸
     public final static String STOP_EMOJI  = "\u23F9"; // ⏹
-    public final static Permission[] RECOMMENDED_PERMS = {Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_HISTORY, Permission.MESSAGE_ADD_REACTION,
+    public final static Permission[] RECOMMENDED_PERMS = new Permission[]{Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_HISTORY, Permission.MESSAGE_ADD_REACTION,
                                 Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_ATTACH_FILES, Permission.MESSAGE_MANAGE, Permission.MESSAGE_EXT_EMOJI,
                                 Permission.MANAGE_CHANNEL, Permission.VOICE_CONNECT, Permission.VOICE_SPEAK, Permission.NICKNAME_CHANGE};
-    public final static GatewayIntent[] INTENTS = {GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_VOICE_STATES};
     /**
      * @param args the command line arguments
      */
@@ -62,12 +59,17 @@ public class JMusicBot
         Prompt prompt = new Prompt("JMusicBot", "Switching to nogui mode. You can manually start in nogui mode by including the -Dnogui=true flag.", 
                 "true".equalsIgnoreCase(System.getProperty("nogui", "false")));
         
+        // check deprecated nogui mode (new way of setting it is -Dnogui=true)
+        for(String arg: args)
+            if("-nogui".equalsIgnoreCase(arg))
+            {
+                prompt.alert(Prompt.Level.WARNING, "GUI", "The -nogui flag has been deprecated. "
+                        + "Please use the -Dnogui=true flag before the name of the jar. Example: java -jar -Dnogui=true JMusicBot.jar");
+                break;
+            }
+        
         // get and check latest version
         String version = OtherUtil.checkVersion(prompt);
-        
-        // check for valid java version
-        if(!System.getProperty("java.vm.name").contains("64"))
-            prompt.alert(Prompt.Level.WARNING, "Java Version", "It appears that you may not be using a supported Java version. Please use 64-bit java.");
         
         // load config
         BotConfig config = new BotConfig(prompt);
@@ -98,16 +100,16 @@ public class JMusicBot
                 .setGuildSettingsManager(settings)
                 .addCommands(aboutCommand,
                         new PingCommand(),
-                        new SettingsCmd(bot),
+                        new SettingsCmd(),
                         
                         new LyricsCmd(bot),
                         new NowplayingCmd(bot),
-                        new PlayCmd(bot),
+                        new PlayCmd(bot, config.getLoading()),
                         new PlaylistsCmd(bot),
                         new QueueCmd(bot),
                         new RemoveCmd(bot),
-                        new SearchCmd(bot),
-                        new SCSearchCmd(bot),
+                        new SearchCmd(bot, config.getSearching()),
+                        new SCSearchCmd(bot, config.getSearching()),
                         new ShuffleCmd(bot),
                         new SkipCmd(bot),
 
@@ -115,24 +117,22 @@ public class JMusicBot
                         new ForceskipCmd(bot),
                         new MoveTrackCmd(bot),
                         new PauseCmd(bot),
-                        new PlaynextCmd(bot),
+                        new PlaynextCmd(bot, config.getLoading()),
                         new RepeatCmd(bot),
                         new SkiptoCmd(bot),
                         new StopCmd(bot),
                         new VolumeCmd(bot),
                         
-                        new PrefixCmd(bot),
-                        new SetdjCmd(bot),
-                        new SettcCmd(bot),
-                        new SetvcCmd(bot),
+                        new SetdjCmd(),
+                        new SettcCmd(),
+                        new SetvcCmd(),
                         
                         new AutoplaylistCmd(bot),
-                        new DebugCmd(bot),
                         new PlaylistCmd(bot),
-                        new SetavatarCmd(bot),
-                        new SetgameCmd(bot),
-                        new SetnameCmd(bot),
-                        new SetstatusCmd(bot),
+                        new SetavatarCmd(),
+                        new SetgameCmd(),
+                        new SetnameCmd(),
+                        new SetstatusCmd(),
                         new ShutdownCmd(bot)
                 );
         if(config.useEval())
@@ -144,11 +144,12 @@ public class JMusicBot
             cb.useDefaultGame();
         else if(config.getGame().getName().equalsIgnoreCase("none"))
         {
-            cb.setActivity(null);
+            cb.setGame(null);
             nogame = true;
         }
         else
-            cb.setActivity(config.getGame());
+            cb.setGame(config.getGame());
+        CommandClient client = cb.build();
         
         if(!prompt.isNoGUI())
         {
@@ -166,18 +167,17 @@ public class JMusicBot
             }
         }
         
-        log.info("Loaded config from " + config.getConfigLocation());
+        log.info("Loaded config from "+config.getConfigLocation());
         
         // attempt to log in and start
         try
         {
-            JDA jda = JDABuilder.create(config.getToken(), Arrays.asList(INTENTS))
-                    .enableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE)
-                    .disableCache(CacheFlag.ACTIVITY, CacheFlag.CLIENT_STATUS, CacheFlag.EMOTE)
-                    .setActivity(nogame ? null : Activity.playing("loading..."))
-                    .setStatus(config.getStatus()==OnlineStatus.INVISIBLE || config.getStatus()==OnlineStatus.OFFLINE 
-                            ? OnlineStatus.INVISIBLE : OnlineStatus.DO_NOT_DISTURB)
-                    .addEventListeners(cb.build(), waiter, new Listener(bot))
+            JDA jda = new JDABuilder(AccountType.BOT)
+                    .setToken(config.getToken())
+                    .setAudioEnabled(true)
+                    .setGame(nogame ? null : Game.playing("loading..."))
+                    .setStatus(config.getStatus()==OnlineStatus.INVISIBLE||config.getStatus()==OnlineStatus.OFFLINE ? OnlineStatus.INVISIBLE : OnlineStatus.DO_NOT_DISTURB)
+                    .addEventListener(client, waiter, new Listener(bot))
                     .setBulkDeleteSplittingEnabled(true)
                     .build();
             bot.setJDA(jda);

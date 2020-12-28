@@ -25,7 +25,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.core.entities.Message;
 
 /**
  *
@@ -35,14 +35,13 @@ public class PlaynextCmd extends DJCommand
 {
     private final String loadingEmoji;
     
-    public PlaynextCmd(Bot bot)
+    public PlaynextCmd(Bot bot, String loadingEmoji)
     {
         super(bot);
-        this.loadingEmoji = bot.getConfig().getLoading();
+        this.loadingEmoji = loadingEmoji;
         this.name = "playnext";
         this.arguments = "<title|URL>";
         this.help = "plays a single song next";
-        this.aliases = bot.getConfig().getAliases(this.name);
         this.beListening = true;
         this.bePlaying = false;
     }
