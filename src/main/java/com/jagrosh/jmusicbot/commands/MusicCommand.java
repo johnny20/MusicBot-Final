@@ -20,10 +20,10 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.settings.Settings;
 import com.jagrosh.jmusicbot.audio.AudioHandler;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 
 /**
  *
@@ -73,6 +73,14 @@ public abstract class MusicCommand extends Command
                 event.replyError("You must be listening in "+(current==null ? "a voice channel" : "**"+current.getName()+"**")+" to use that!");
                 return;
             }
+
+            VoiceChannel afkChannel = userState.getGuild().getAfkChannel();
+            if(afkChannel != null && afkChannel.equals(userState.getChannel()))
+            {
+                event.replyError("You cannot use that command in an AFK channel!");
+                return;
+            }
+
             if(!event.getGuild().getSelfMember().getVoiceState().inVoiceChannel())
             {
                 try 

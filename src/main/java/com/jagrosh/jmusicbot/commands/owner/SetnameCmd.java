@@ -18,7 +18,7 @@ package com.jagrosh.jmusicbot.commands.owner;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import com.jagrosh.jmusicbot.Bot;
 import com.jagrosh.jmusicbot.commands.OwnerCommand;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.api.exceptions.RateLimitedException;
 
 /**
  *
@@ -26,11 +26,12 @@ import net.dv8tion.jda.core.exceptions.RateLimitedException;
  */
 public class SetnameCmd extends OwnerCommand
 {
-    public SetnameCmd()
+    public SetnameCmd(Bot bot)
     {
         this.name = "setname";
         this.help = "sets the name of the bot";
         this.arguments = "<name>";
+        this.aliases = bot.getConfig().getAliases(this.name);
         this.guildOnly = false;
     }
     
