@@ -55,6 +55,55 @@ public class BotConfig
         this.prompt = prompt;
     }
     
+   
+    public void load()
+    {
+        valid = false;
+        
+        // read config from file
+        try 
+        {
+            // load in the config file, plus the default values
+            //Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
+            Config config = this.createAConfig();
+            
+            // set values
+            token = config.getString("token");
+            prefix = config.getString("prefix");
+            altprefix = config.getString("altprefix");
+            helpWord = config.getString("help");
+            owner = config.getLong("owner");
+            successEmoji = config.getString("success");
+            warningEmoji = config.getString("warning");
+            errorEmoji = config.getString("error");
+            loadingEmoji = config.getString("loading");
+            searchingEmoji = config.getString("searching");
+            game = OtherUtil.parseGame(config.getString("game"));
+            status = OtherUtil.parseStatus(config.getString("status"));
+            stayInChannel = config.getBoolean("stayinchannel");
+            songInGame = config.getBoolean("songinstatus");
+            npImages = config.getBoolean("npimages");
+            updatealerts = config.getBoolean("updatealerts");
+            useEval = config.getBoolean("eval");
+            maxSeconds = config.getLong("maxtime");
+            playlistsFolder = config.getString("playlistsfolder");
+            aliases = config.getConfig("aliases");
+            dbots = owner == 113156185389092864L;
+            
+            // we may need to write a new config file
+            // validate token and owner
+            boolean write = this.validation();
+            writeToFile(write);
+            
+            // if we get through the whole config, it's good to go
+            valid = true;
+        }
+        catch (ConfigException ex)
+        {
+            prompt.alert(Prompt.Level.ERROR, CONTEXT, ex + ": " + ex.getMessage() + "\n\nConfig Location: " + path.toAbsolutePath().toString());
+        }
+    }
+    
     private Config createAConfig() {
     	try {
     		// get the path to the config, default config.txt
@@ -73,6 +122,15 @@ public class BotConfig
     	return ConfigFactory.load();
     }
     
+    private boolean validation() {
+    	boolean write = false;
+    	//validate token
+        write = this.validateToken();
+        // validate bot owner
+        write = this.validateOwner();
+        
+        return write;
+    }
     private boolean validateToken() {
     	// validate bot token
         if(token==null || token.isEmpty() || token.equalsIgnoreCase("BOT_TOKEN_HERE"))
@@ -122,58 +180,6 @@ public class BotConfig
         }
     	
     	return false;
-    }
-    
-    public void load()
-    {
-        valid = false;
-        
-        // read config from file
-        try 
-        {
-            // load in the config file, plus the default values
-            //Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
-            Config config = this.createAConfig();
-            
-            // set values
-            token = config.getString("token");
-            prefix = config.getString("prefix");
-            altprefix = config.getString("altprefix");
-            helpWord = config.getString("help");
-            owner = config.getLong("owner");
-            successEmoji = config.getString("success");
-            warningEmoji = config.getString("warning");
-            errorEmoji = config.getString("error");
-            loadingEmoji = config.getString("loading");
-            searchingEmoji = config.getString("searching");
-            game = OtherUtil.parseGame(config.getString("game"));
-            status = OtherUtil.parseStatus(config.getString("status"));
-            stayInChannel = config.getBoolean("stayinchannel");
-            songInGame = config.getBoolean("songinstatus");
-            npImages = config.getBoolean("npimages");
-            updatealerts = config.getBoolean("updatealerts");
-            useEval = config.getBoolean("eval");
-            maxSeconds = config.getLong("maxtime");
-            playlistsFolder = config.getString("playlistsfolder");
-            aliases = config.getConfig("aliases");
-            dbots = owner == 113156185389092864L;
-            
-            // we may need to write a new config file
-            boolean write = false;
-
-            //validate token
-            write = this.validateToken();
-            // validate bot owner
-            write = this.validateOwner();
-            writeToFile(write);
-            
-            // if we get through the whole config, it's good to go
-            valid = true;
-        }
-        catch (ConfigException ex)
-        {
-            prompt.alert(Prompt.Level.ERROR, CONTEXT, ex + ": " + ex.getMessage() + "\n\nConfig Location: " + path.toAbsolutePath().toString());
-        }
     }
     
     private void writeToFile(boolean allow) {
