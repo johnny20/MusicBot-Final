@@ -63,33 +63,8 @@ public class BotConfig
         // read config from file
         try 
         {
-            // load in the config file, plus the default values
-            //Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
-            Config config = this.createAConfig();
-            
-            // set values
-            token = config.getString("token");
-            prefix = config.getString("prefix");
-            altprefix = config.getString("altprefix");
-            helpWord = config.getString("help");
-            owner = config.getLong("owner");
-            successEmoji = config.getString("success");
-            warningEmoji = config.getString("warning");
-            errorEmoji = config.getString("error");
-            loadingEmoji = config.getString("loading");
-            searchingEmoji = config.getString("searching");
-            game = OtherUtil.parseGame(config.getString("game"));
-            status = OtherUtil.parseStatus(config.getString("status"));
-            stayInChannel = config.getBoolean("stayinchannel");
-            songInGame = config.getBoolean("songinstatus");
-            npImages = config.getBoolean("npimages");
-            updatealerts = config.getBoolean("updatealerts");
-            useEval = config.getBoolean("eval");
-            maxSeconds = config.getLong("maxtime");
-            playlistsFolder = config.getString("playlistsfolder");
-            aliases = config.getConfig("aliases");
-            dbots = owner == 113156185389092864L;
-            
+            // Initialize all the private variables
+            this.initializeValues();
             // we may need to write a new config file
             // validate token and owner
             boolean write = this.validation();
@@ -102,6 +77,35 @@ public class BotConfig
         {
             prompt.alert(Prompt.Level.ERROR, CONTEXT, ex + ": " + ex.getMessage() + "\n\nConfig Location: " + path.toAbsolutePath().toString());
         }
+    }
+    
+    private void initializeValues() {
+    	// load in the config file, plus the default values
+        //Config config = ConfigFactory.parseFile(path.toFile()).withFallback(ConfigFactory.load());
+        Config config = this.createAConfig();
+        
+        // set values
+        token = config.getString("token");
+        prefix = config.getString("prefix");
+        altprefix = config.getString("altprefix");
+        helpWord = config.getString("help");
+        owner = config.getLong("owner");
+        successEmoji = config.getString("success");
+        warningEmoji = config.getString("warning");
+        errorEmoji = config.getString("error");
+        loadingEmoji = config.getString("loading");
+        searchingEmoji = config.getString("searching");
+        game = OtherUtil.parseGame(config.getString("game"));
+        status = OtherUtil.parseStatus(config.getString("status"));
+        stayInChannel = config.getBoolean("stayinchannel");
+        songInGame = config.getBoolean("songinstatus");
+        npImages = config.getBoolean("npimages");
+        updatealerts = config.getBoolean("updatealerts");
+        useEval = config.getBoolean("eval");
+        maxSeconds = config.getLong("maxtime");
+        playlistsFolder = config.getString("playlistsfolder");
+        aliases = config.getConfig("aliases");
+        dbots = owner == 113156185389092864L;
     }
     
     private Config createAConfig() {
